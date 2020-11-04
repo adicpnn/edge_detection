@@ -13,6 +13,8 @@ from PIL import Image, ImageOps
 
 def load_image(filename):
     im = Image.open(filename)
+    logging.info('Converting to grayscale')
+    im = ImageOps.grayscale(im)
     return np.array(im)
 
 
@@ -78,16 +80,6 @@ def convolve(img, kernel):
     return img
 
 
-def split(img):
-    if img.shape[2] != 3:
-        raise ValueError('The split function requires a 3-channel input image')
-    return img[:, :, 0], img[:, :, 1], img[:, :, 2]
-
-
-def merge(r, g, b):
-    return np.dstack((r, g, b))
-
-
 if __name__ == '__main__':
     logging.basicConfig(
         format='%(levelname)s: %(message)s', level=logging.INFO)
@@ -104,28 +96,17 @@ if __name__ == '__main__':
     logging.info('Loading input image %s' % (args.input))
     inputImage = load_image(args.input)
 
-    logging.info('Splitting it into 3 channels')
-    (r, g, b) = split(inputImage)
 
-    logging.info('Computing a laplacian kernel with size %d and sigma %.2f' %
+    logging.info('Computing a LoG kernel with size %d and sigma %.2f' %
                  (args.k, args.sigma))
     kernel = create_log_kernel(args.k, args.sigma)
 
-    logging.info('Convolving the first channel')
-    r = convolve(r, kernel)
-    logging.info('Convolving the second channel')
-    g = convolve(g, kernel)
-    logging.info('Convolving the third channel')
-    b = convolve(b, kernel)
-    logging.info('Checking for zero crossings in first channel')
-    z_c_r = z_c_test(r)
-    logging.info('Checking for zero crossings in second channel')
-    z_c_g = z_c_test(g)
-    logging.info('Checking for zero crossings in third channel')
-    z_c_b = z_c_test(b)
+    logging.info('Convoluting image with laplacian kernel')
+    resultImage = convolve(inputImage, kernel)
 
-    logging.info('Merging results')
-    resultImage = merge(z_c_r, z_c_g, z_c_b)
+    logging.info('Checking for zero crossings')
+    resultImage = z_c_test(resultImage)
+
     logging.info('Converting image type from float64 to uint8')
     resultImage *= 255
     resultImage = resultImage.astype(np.uint8)
