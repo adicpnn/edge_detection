@@ -15,6 +15,7 @@ def load_image(filename):
     im = Image.open(filename)
     logging.info('Converting to grayscale')
     im = ImageOps.grayscale(im)
+    imageio.imwrite('grayscale.jpg', im)
     return np.array(im)
 
 
@@ -27,8 +28,11 @@ def l_o_g(x, y, sigma):
 
 def create_log_kernel(sigma=1.0, size=5):
     w = math.ceil(float(size)*float(sigma))
+
     if(w % 2 == 0):
+
         w = w + 1
+
     l_o_g_mask = []
     w_range = int(math.floor(w/2))
     logging.info("Kernel range is (" + str(-w_range) + ", " + str(w_range)+')')
@@ -96,16 +100,17 @@ if __name__ == '__main__':
     logging.info('Loading input image %s' % (args.input))
     inputImage = load_image(args.input)
 
-
     logging.info('Computing a LoG kernel with size %d and sigma %.2f' %
                  (args.k, args.sigma))
     kernel = create_log_kernel(args.k, args.sigma)
 
     logging.info('Convoluting image with laplacian kernel')
     resultImage = convolve(inputImage, kernel)
+    imageio.imwrite('convolvedNotChecked.jpg', resultImage)
 
     logging.info('Checking for zero crossings')
     resultImage = z_c_test(resultImage)
+    imageio.imwrite('zeroChecked.jpg', resultImage)
 
     logging.info('Converting image type from float64 to uint8')
     resultImage *= 255
