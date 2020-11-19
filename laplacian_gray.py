@@ -15,6 +15,7 @@ def load_image(filename):
     im = Image.open(filename)
     logging.info('Converting to grayscale')
     im = ImageOps.grayscale(im)
+    logging.info('Printing image to grayscale.jpg')
     imageio.imwrite('grayscale.jpg', im)
     return np.array(im)
 
@@ -106,10 +107,13 @@ if __name__ == '__main__':
 
     logging.info('Convoluting image with laplacian kernel')
     resultImage = convolve(inputImage, kernel)
+    logging.info(
+        'Printing image after convolution with laplacian kernel to convolvedNotChecked.jpg')
     imageio.imwrite('convolvedNotChecked.jpg', resultImage)
 
     logging.info('Checking for zero crossings')
     resultImage = z_c_test(resultImage)
+    logging.info('Printing zero checked image to zeroChecked.jpg')
     imageio.imwrite('zeroChecked.jpg', resultImage)
 
     logging.info('Converting image type from float64 to uint8')
