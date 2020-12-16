@@ -10,7 +10,7 @@ import math
 import sys
 from PIL import Image, ImageOps
 
-
+# Opens an image from source folder, then converts it to grayscale
 def load_image(filename):
     im = Image.open(filename)
     logging.info('Converting to grayscale')
@@ -19,14 +19,14 @@ def load_image(filename):
     imageio.imwrite('grayscale.jpg', im)
     return np.array(im)
 
-
+# Equation to calculate LoG element based on index and given sigma
 def l_o_g(x, y, sigma):
     nom = ((y**2)+(x**2)-2*(sigma**2))
     denom = ((2*math.pi*(sigma**6)))
     expo = math.exp(-((x**2)+(y**2))/(2*(sigma**2)))
     return nom*expo/denom
 
-
+# Creates a matrix filled with elements calculated using l_o_g function
 def create_log_kernel(sigma=1.0, size=5):
     w = math.ceil(float(size)*float(sigma))
 
@@ -44,7 +44,7 @@ def create_log_kernel(sigma=1.0, size=5):
     l_o_g_mask = l_o_g_mask.reshape(w, w)
     return l_o_g_mask
 
-
+# Checks each element in the convoluted image for zero crossing, placing 1 where a crossing exists, and 0 elsewhere
 def z_c_test(l_o_g_image):
     z_c_image = np.zeros(l_o_g_image.shape)
     for i in range(1, l_o_g_image.shape[0]-1):
@@ -63,7 +63,8 @@ def z_c_test(l_o_g_image):
                 z_c_image[i, j] = 1
     return z_c_image
 
-
+# Convolutes the kernel with a piece from the given image(with equal size as the kernel, centered around the given indexes) 
+# Returns original element if it's on the edge of the original image
 def convolve_pixel(img, kernel, i, j):
     k = kernel.shape[0] // 2
     if i < k or j < k or i >= img.shape[0]-k or j >= img.shape[1]-k:
@@ -75,7 +76,8 @@ def convolve_pixel(img, kernel, i, j):
                 value += img[i-u, j-v] * kernel[k+u, k+v]
         return value
 
-
+# Convolutes the kernel with the original image
+# Makes use of convolve_pixel to split image into kernel size pieces and convolve then
 def convolve(img, kernel):
     new_img = np.array(img)
     for i in np.arange(0, img.shape[0]):
@@ -84,7 +86,9 @@ def convolve(img, kernel):
     img = new_img
     return img
 
-
+# Main function 
+# Parses arguments given from console
+# Calls above defined functions according to the edge detection algorithm, logging information on the step it's on
 if __name__ == '__main__':
     logging.basicConfig(
         format='%(levelname)s: %(message)s', level=logging.INFO)
